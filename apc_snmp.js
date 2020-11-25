@@ -1,6 +1,6 @@
 /*
 Name: apc_snmp.js
-Version: 1.2
+Version: 1.2.2
 Author: Steve Talley (steve@dustysun.com)
 Website: DustySun.com
 
@@ -69,7 +69,7 @@ jQuery(function($) {
           var apc_ip = $(this).attr('data-apc-ip');
           var apc_outlet = $(this).attr('data-apc-outlet');
 
-          ajaxURL = 'http://10.0.1.144/snmp.php?community=' + snmp_community + '&ip=' + apc_ip + '&outlet=' + apc_outlet + '&statusonly=true';
+          ajaxURL = 'http://fusion.home:8082/snmp-control/snmp.php?community=' + snmp_community + '&ip=' + apc_ip + '&outlet=' + apc_outlet + '&statusonly=true';
           console.log(ajaxURL);
           $.ajax({
               dataType: "json",
@@ -129,7 +129,7 @@ jQuery(function($) {
           var command_to_send = 3;
         }
 
-        ajaxURL = 'http://10.0.1.144/snmp.php?community=' + snmp_community + '&ip=' + apc_target_ip + '&outlet=' + apc_target_outlet + '&command=' + command_to_send + '&statusonly=false';
+        ajaxURL = 'http://fusion.home:8082/snmp.php?community=' + snmp_community + '&ip=' + apc_target_ip + '&outlet=' + apc_target_outlet + '&command=' + command_to_send + '&statusonly=false';
         console.log(ajaxURL);
         $.ajax({
             dataType: "json",
@@ -139,7 +139,7 @@ jQuery(function($) {
             success: function(response){
 
 
-              if(response['data']['outlet_status'] == command_to_send) {
+              if(response['data']['outlet_status'] == true) {
                 alert("Success. Please wait 30 seconds before turning it on or off again.");
               } else {
                 alert("Unable to do what you asked. :(");
