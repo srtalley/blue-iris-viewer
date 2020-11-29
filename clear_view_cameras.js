@@ -1,12 +1,16 @@
 /*
 Name: clear_view_cameras.js
-Version: 1.2.2
+Version: 1.2.3
 Author: Steve Talley (steve@dustysun.com)
 Website: DustySun.com
-Date: 2019-09-17
+Date: 2020-11-28
 
 Description: This is the main JavaScript file that loads the BlueIris
 cameras via Ajax calls.
+
+Changes:
+* Added ability to set the variables via data-attributes on the canvasWrapperTagGlobal HTML element.
+* Added ability to not resize the viewport to allow embedding in pages at less than 100% max width and height.
 */
 
 
@@ -16,9 +20,50 @@ cameras via Ajax calls.
 jQuery(function($) {
 
 //Begin here Blue Iris cameras
+//img HTML ID tag where the image will be refreshed
+var cameraImgTagGlobal = '#cameraImg';
+var cameraImgIDGlobal = 'cameraImg';
+var canvasViewportTagGlobal = '#cameraViewport';
+var cameraSelectionTagGlobal = '#cameraSelection';
+var cameraSelectionTagLinks = '#cameraLinks';
+var cameraRefreshTagLinks = '#refreshRates';
+var cameraQualityTagLinks = '#camQuality';
+var canvasWrapperTagGlobal = '#cameraViewportWrapper';
+var cameraViewerStatusGlobal = '#cameraViewerStatus';
 
 //set this to the http:// URL of the Blue Iris server if it's a different machine
-var blueIrisServerGlobal = 'http://sol.home';
+if(typeof( $(canvasWrapperTagGlobal).data('blue_iris_server') !== 'undefined')) {
+	var blueIrisServerGlobal = $(canvasWrapperTagGlobal).data('blue_iris_server');
+} else {
+	var blueIrisServerGlobal = 'http://localhost';
+}
+if(typeof( $(canvasWrapperTagGlobal).data('first_cam') !== 'undefined')) {
+	var customFirstCamera = $(canvasWrapperTagGlobal).data('first_cam');
+} else {
+	var customFirstCamera = null;
+}
+if(typeof( $(canvasWrapperTagGlobal).data('scroll_to_top') !== 'undefined')) {
+	var scrollTopOnSwitch = $(canvasWrapperTagGlobal).data('scroll_to_top');
+} else {
+	var scrollTopOnSwitch = false;
+}
+if(typeof( $(canvasWrapperTagGlobal).data('resize_viewport') !== 'undefined')) {
+	var allowResizeViewport = $(canvasWrapperTagGlobal).data('resize_viewport');
+} else {
+	var allowResizeViewport = true;
+}
+if(typeof( $(canvasWrapperTagGlobal).data('refresh_rate') !== 'undefined')) {
+	var refreshRateGlobal = $(canvasWrapperTagGlobal).data('refresh_rate');
+} else {
+	var refreshRateGlobal = 500;
+}
+if(typeof( $(canvasWrapperTagGlobal).data('quality') !== 'undefined')) {
+	var qualityRateGlobal = $(canvasWrapperTagGlobal).data('quality');
+} else {
+	var qualityRateGlobal = 80;
+}
+
+
 var selectedCameraGlobal;
 var previousCameraGlobal;
 var selectedCameraWidthGlobal;
@@ -26,24 +71,21 @@ var selectedCameraHeightGlobal;
 var scaledCameraWidthGlobal;
 var scaledCameraHeightGlobal;
 var selectedGroupGlobal;
-var selectedQualityGlobal = 40;
-
-//img HTML ID tag where the image will be refreshed
-var cameraImgTagGlobal = '#cameraImg';
-var cameraImgIDGlobal = 'cameraImg';
-var canvasWrapperTagGlobal = '#outerViewportWrapper';
-var canvasViewportTagGlobal = '#cameraViewport';
-var cameraSelectionTagGlobal = '#cameraSelection';
 var camArrayGlobal = [];
 var camGroupArrayGlobal = [];
 var currentCamArray;
-var refreshRateGlobal = 200;
 
 //Global var for the setTimeout stream so that it can be stopped
 var refreshImageTimer;
 
 //Global var for the update camera promise
 var updateCameraPromise;
+
+//Global var to deal with image loading issue
+var cameraImageErrorTimer;
+
+//Global var to handle window onresize being called on first load on mobile
+var initialLoad = true;
 
 //Zooming vars
 var imageScale = 1;
@@ -197,8 +239,12 @@ $(document).ready(function()
 //Window resize function
 window.onresize = function(event)
 {
-	//Call the resize event when the window size is changed
-	ResizeViewport( selectedCameraGlobal, camArrayGlobal );
+	//workaround for onresize being called on first load on mobile which causes errors
+	if(!initialLoad) {
+		//Call the resize event when the window size is changed
+		ResizeViewport();
+	}
+	initialLoad = false;
 } //end window.onresize = function(event)
 /* ==============================================================
     MAIN FUNCTIONS
@@ -225,15 +271,14 @@ function ClearViewCamerasHandler( )
 			setCookieRefreshRate( refreshRateGlobal );
 
 			//Assign the quality to a cookie
-			setCookieQuality( selectedQualityGlobal );
+			setCookieQuality( qualityRateGlobal );
 			
 			//Get a listing of the cameras
 			var camListPopulate = GetCamList();
 
-			//var groupArray = [];
 			camListPopulate.done( function( listOfCams )
 			{
-
+	
 				//loop through the returned array
 				for( var i = 0; i < listOfCams.data.length; i++)
 				{
@@ -251,9 +296,22 @@ function ClearViewCamerasHandler( )
 				} //end for( var i = 0; i < camArrayGlobal.length; i++)
 
 				//Set the first camera element returned to the selectedCameraGlobal value
-				selectedCameraGlobal = camArrayGlobal[0].camName;
-				//And save this element to a global array
-				currentCamArray = camArrayGlobal[0];
+				if(customFirstCamera != null) {
+					//search the array for the cam name
+					// var cameraSearch = $.map(camArrayGlobal, function(value,key) {
+					var cameraSearch = camArrayGlobal.some(function(value, key) {
+						if(value.camName == customFirstCamera) {
+							selectedCameraGlobal = customFirstCamera;
+							//And save this element to a global array
+							currentCamArray = camArrayGlobal[key];
+						}
+					});
+				} else {
+					selectedCameraGlobal = camArrayGlobal[0].camName;
+					//And save this element to a global array
+					currentCamArray = camArrayGlobal[0];
+				}// end if(customFirstCamera != '')
+
 				//Save the height and width to global values
 				selectedCameraWidthGlobal = currentCamArray.camWidth;
 				selectedCameraHeightGlobal = currentCamArray.camHeight;
@@ -286,7 +344,6 @@ function ClearViewCamerasHandler( )
 //Set the session value in a cookie
 function setCookieSession( setSessionValue )
 {
-	//console.log( setSessionValue.session );
 	$.cookie( 'session', setSessionValue.session, { expires: 7, path: '/' } );
 } //end function setCookieSession
 
@@ -362,19 +419,39 @@ function LoginToBlueIris()
 //You must access the data array for the actual camera info
 function GetCamList()
 {
+	// Attempted to make this handle when the server is not responding 
+	// but may not work exactly correctly
 	var currentSessionKey = getCookieSession();
-	return $.ajax({
+
+
+	var ajaxCall = $.ajax({
 
 		url: blueIrisServerGlobal + '/json',
 		type: 'POST',
 		data: JSON.stringify({'cmd': 'camlist',	'session' : currentSessionKey }),
-		dataType: "json"
-	}); //end return ajax
+		dataType: "json",
+		tryCount : 0,
+		retryLimit : 10,
+		async: false,
+	});
+	// var parsed_data = JSON.parse(JSON.stringify(ajaxCall));
+	// if(parsed_data.responseJSON.result == 'success') {
+		console.log('Successfully retrieved camera list');
+		console.log(ajaxCall);
+		// return ajaxCall;
+	// } else {
+	// 	console.log('Retrying getting camera list...');
+	// 	setTimeout(function () {
+	// 		$(cameraViewerStatusGlobal).text('Retrying getting camera list...');
+	// 		ajaxCall = GetCamList();
+	// 	}, 2000);
+	// }
+	return ajaxCall;
 
 } //end function GetCamList
 
 
-function ResizeViewport( rvCurrentCam, rvCameraArray )
+function ResizeViewport()
 {
 
 	var viewportWidth = $(window).innerWidth();
@@ -384,85 +461,95 @@ function ResizeViewport( rvCurrentCam, rvCameraArray )
 	var selectedCameraWidthGlobal = currentCamArray.camWidth;
 	var selectedCameraHeightGlobal = currentCamArray.camHeight;
 	var camRatio = selectedCameraHeightGlobal / selectedCameraWidthGlobal;
-	var camScaledWidth = Math.round(viewportHeight / camRatio);
-	var camScaledHeight = Math.round(viewportWidth * camRatio);
+	if(allowResizeViewport) {
+		var camScaledWidth = Math.round(viewportHeight / camRatio);
+		var camScaledHeight = Math.round(viewportWidth * camRatio);
 
-	if (viewportRatio <= camRatio) {
-		scaledCameraWidthGlobal = camScaledWidth;
-		scaledCameraHeightGlobal = viewportHeight;
+		if (viewportRatio <= camRatio) {
+			scaledCameraWidthGlobal = camScaledWidth;
+			scaledCameraHeightGlobal = viewportHeight;
 
-		$( cameraImgTagGlobal ).css({
-			'width': 'auto',
-			'height': scaledCameraHeightGlobal + "px",
-		});
-		//reset the wrapper viewport margin
-		$(canvasViewportTagGlobal).css({
-			'margin-top': 'auto',
-		});
-		//reset the viewport wrapper height since we don't need to center
-		$( canvasWrapperTagGlobal ).css({
-			'height': 'auto',
-		});
-	} else if ( viewportRatio > camRatio ) {
-		scaledCameraWidthGlobal = viewportWidth;
-		scaledCameraHeightGlobal = camScaledHeight;
-		var camScale = scaledCameraWidthGlobal / selectedCameraWidthGlobal;
+			$( cameraImgTagGlobal ).css({
+				'width': 'auto',
+				'height': scaledCameraHeightGlobal + "px",
+			});
+			//reset the wrapper viewport margin
+			$(canvasViewportTagGlobal).css({
+				'margin-top': 'auto',
+			});
+			//reset the viewport wrapper height since we don't need to center
+			$( canvasWrapperTagGlobal ).css({
+				'height': 'auto',
+			});
+		} else if ( viewportRatio > camRatio ) {
+			scaledCameraWidthGlobal = viewportWidth;
+			scaledCameraHeightGlobal = camScaledHeight;
+			var camScale = scaledCameraWidthGlobal / selectedCameraWidthGlobal;
 
-		$( cameraImgTagGlobal ).css({
-			'width': scaledCameraWidthGlobal + "px",
-			'height': 'auto',
-		});
-		//Set the margin-top of the camera div to the height of the cameraSelection div
-		//this looks better visually and prevents the container from overflowing
-		//the top of the screen
+			$( cameraImgTagGlobal ).css({
+				'width': scaledCameraWidthGlobal + "px",
+				'height': 'auto',
+			});
+			//Set the margin-top of the camera div to the height of the cameraSelection div
+			//this looks better visually and prevents the container from overflowing
+			//the top of the screen
 
-		//Get the height of the camera selection div. This will be our new margin top
-		var camSelHeight = $(cameraSelectionTagGlobal).outerHeight(includeMargin=true);
+			//Get the height of the camera selection div. This will be our new margin top
+			var camSelHeight = $(cameraSelectionTagGlobal).outerHeight(includeMargin=true);
 
-		//Get the content height without the margin-top applied
-		var contentHeight = scaledCameraHeightGlobal + $(cameraSelectionTagGlobal).outerHeight(includeMargin=true);
+			//Get the content height without the margin-top applied
+			var contentHeight = scaledCameraHeightGlobal + $(cameraSelectionTagGlobal).outerHeight(includeMargin=true);
 
-		//Check to see if the content plus our proposed new margin top are greater
-		//than the available space in the viewport.
-		if (contentHeight + camSelHeight > viewportHeight) {
-			var viewportSetting = ( viewportHeight - contentHeight ) / 2;
+			//Check to see if the content plus our proposed new margin top are greater
+			//than the available space in the viewport.
+			if (contentHeight + camSelHeight > viewportHeight) {
+				var viewportSetting = ( viewportHeight - contentHeight ) / 2;
 
-			//Make sure we didn't get a negative number - only set our custom
-			//margin top if the calculation is greater or equal to 0
-			if( viewportSetting >= 0 ) {
+				//Make sure we didn't get a negative number - only set our custom
+				//margin top if the calculation is greater or equal to 0
+				if( viewportSetting >= 0 ) {
 
-				// viewportMarginTop = viewportSetting;
-				var viewportMarginTop = 0;
+					// viewportMarginTop = viewportSetting;
+					var viewportMarginTop = 0;
 
-			} else if ( viewportSetting < 0 ) {
+				} else if ( viewportSetting < 0 ) {
 
-				//this section is for an almost, but not quite, full height cam window
-				//see if there will be any space below the window and divide it accordingly
+					//this section is for an almost, but not quite, full height cam window
+					//see if there will be any space below the window and divide it accordingly
 
-				var viewportAndContentLeftover = viewportHeight - scaledCameraHeightGlobal;
+					var viewportAndContentLeftover = viewportHeight - scaledCameraHeightGlobal;
 
-				if( viewportAndContentLeftover > 40 )
-				{
-					viewportAndContentLeftover = 0;
+					if( viewportAndContentLeftover > 40 )
+					{
+						viewportAndContentLeftover = 0;
+					}
+
+					viewportMarginTop = viewportAndContentLeftover + Math.round(Math.abs(viewportSetting * 2));
 				}
 
-				viewportMarginTop = viewportAndContentLeftover + Math.round(Math.abs(viewportSetting * 2));
+			} else {
+				viewportMarginTop = (viewportHeight - (scaledCameraHeightGlobal + camSelHeight)) / 8;
+			}
+			if(isSafari){
+				viewportMarginTop = 0;
 			}
 
-		} else {
-			viewportMarginTop = (viewportHeight - (scaledCameraHeightGlobal + camSelHeight)) / 8;
-		}
-		if(isSafari){
-			viewportMarginTop = 0;
-		}
-		$(canvasViewportTagGlobal).css({
-			'margin-top': viewportMarginTop,
-		});
-		//set the viewport wrapper height to center the cams
-		$( canvasWrapperTagGlobal ).css({
-			'height': viewportHeight + 'px',
-		});
-	} //end if (contentHeight + camSelHeight > viewportHeight)
+			$(canvasViewportTagGlobal).css({
+				'margin-top': viewportMarginTop,
+			});
+
+			//set the viewport wrapper height to center the cams
+			$( canvasWrapperTagGlobal ).css({
+				'height': viewportHeight + 'px',
+			});
+
+		} //end if (contentHeight + camSelHeight > viewportHeight)
+	} else {
+		var camScaledWidth = $(cameraImgTagGlobal).width();
+		var camScaledHeight = $(cameraImgTagGlobal).height();
+		scaledCameraWidthGlobal = camScaledWidth;
+		scaledCameraHeightGlobal = camScaledHeight;
+	}
 } //end function ResizeViewport
 
 /* ===================================================================================
@@ -508,7 +595,6 @@ function CameraData( camListJSON )
 //Create an object with for camera groups
 function CameraGroupData( cgdCamListJSON )
 {
-	//console.log(cgdCamListJSON);
 	//We only want combined group images (Blue Iris can have multiple)
 	if(typeof cgdCamListJSON.group != false ) //!= "undefined" )
 	{
@@ -543,7 +629,6 @@ function CameraGroupData( cgdCamListJSON )
 
 function PrepareCameraStream( sclCamName, sclImgElement, sclCameraArray )
 {
-
 	//Set the img element tag to the global var if undefined
 	if(typeof sisImgElement == "undefined" ) sclImgElement = cameraImgTagGlobal;
 	if(typeof sclCameraArray == "undefined" ) sclCameraArray = camArrayGlobal;
@@ -574,7 +659,9 @@ function PrepareCameraStream( sclCamName, sclImgElement, sclCameraArray )
 
 
 	//scroll to the top of the image
-	$(document).scrollTop( $(sclImgElement).offset().top );
+	if(scrollTopOnSwitch) {
+		$(document).scrollTop( $(sclImgElement).offset().top );
+	}
 
 } //end function PrepareCameraStream
 
@@ -606,14 +693,22 @@ function BeginCameraStream( cameraServer, cameraSelection, displayRefreshMS, bcs
 		var cameraImageContext = cameraImage.getContext('2d');
 
 		var currentCamImage = new Image();
+		$(currentCamImage).bind('error', function () {
+			setTimeout(function(){
+				console.log('Error retrieving camera stream');
+				$(cameraViewerStatusGlobal).text('Buffering stream...');
+				updateCameraPromise = UpdateCamScreen();
+			}, 500);
+	  	});
 		currentCamImage.src = blueIrisServerGlobal + "/image/" + selectedCameraGlobal  + '?time=' + Math.random() + '&q=' + camQuality;
-		// console.log(currentCamImage.src);
+
 		currentCamImage.onload = function() {
 			cameraImageContext.drawImage(this, 0,0, selectedCameraWidthGlobal, selectedCameraHeightGlobal);
+			$(cameraViewerStatusGlobal).text('');
 			UpdateCam_dfd.resolve();
 			$.when(updateCameraPromise).then(function() {
 				refreshImageTimer = setTimeout(function() {
-					updateCameraPromise =	UpdateCamScreen();
+					updateCameraPromise = UpdateCamScreen();
 				}, displayRefreshMS);
 			});
 		};
@@ -632,7 +727,7 @@ function BeginCameraStream( cameraServer, cameraSelection, displayRefreshMS, bcs
 	//where the camRatio and ViewportRatio are close. There is a slight flash where
 	//the scrollbars appear.
 	setTimeout(function(){
-		ResizeViewport( cameraSelection, bcsCameraArray );
+		ResizeViewport();
 	},50);
 
 	CreateCameraLinks( blueIrisServerGlobal, camArrayGlobal, camGroupArrayGlobal, selectedGroupGlobal, cameraRefreshRatesGlobal );
@@ -642,6 +737,8 @@ function BeginCameraStream( cameraServer, cameraSelection, displayRefreshMS, bcs
 //Change the refresh rate. Relies on a global var for the camera selection
 function ChangeCameraRefreshRate( desiredMS )
 {
+	//Get the global server
+	currentServer = blueIrisServerGlobal;
 
 	//Get the global camera
 	currentCamera = selectedCameraGlobal;
@@ -722,50 +819,54 @@ function GetClickedCamera( mousePos, cameraArray, imgElement )
 function CreateCameraLinks( cclCameraServer, cclCameraArray, cclCameraGroupArray, cclSelectedGroup, cclRefreshRates )
 {
 	//Begin a div for the camera group names, if they exist
-	$('#cameraLinks ul').empty();
+	$(cameraSelectionTagLinks + ' ul').remove();
+	$(cameraSelectionTagLinks).append('<ul></ul>');
 
 	for( var j=0; j < cclCameraGroupArray.length; j++ )
 	{
-		if(cclCameraGroupArray[j].groupName == cclSelectedGroup)
-		{
-				//highlight the current camera
-				$('#cameraLinks ul').append($('<li><a href="#" class="selectedItem cameraGroupLink" name="' + cclCameraGroupArray[j].groupName + '">' + cclCameraGroupArray[j].groupDescription + '</a></li>'));
+			if(cclCameraGroupArray[j].groupName == cclSelectedGroup)
+			{
+					//highlight the current camera
+					$(cameraSelectionTagLinks + ' ul').append($('<li><a href="#" class="selectedItem cameraGroupLink" name="' + cclCameraGroupArray[j].groupName + '">' + cclCameraGroupArray[j].groupDescription + '</a></li>'));
 
 		} else {
 
-			//Create the camera group links
-			$('#cameraLinks ul').append($('<li><a href="#" class="cameraGroupLink" name="' + cclCameraGroupArray[j].groupName + '">' + cclCameraGroupArray[j].groupDescription + '</a></li>'));
+				//Create the camera group links
+				$(cameraSelectionTagLinks + ' ul').append($('<li><a href="#" class="cameraGroupLink" name="' + cclCameraGroupArray[j].groupName + '">' + cclCameraGroupArray[j].groupDescription + '</a></li>'));
 
-		} //end if(cclCameraGroupArray[j].groupName == cclSelectedGroup)
+			} //end if(cclCameraGroupArray[j].groupName == cclSelectedGroup)
 
 	} //end for( var j=0; j < cclCameraArray.length; j++ )
 
 	//Begin a div for the refresh rates
 
-	$('#refreshRates ul').empty();
+	$(cameraRefreshTagLinks + ' ul').remove();
+	$(cameraRefreshTagLinks).append('<ul></ul>');
 
 	for( var i=0; i < cclRefreshRates.length; i++ )
 	{
 		if( getCookieRefreshRate() == cclRefreshRates[i].rateMS )
 		{
-			$('#refreshRates ul').append($('<li><a href="#" class="selectedItem cameraRefreshLink" rate="' + cclRefreshRates[i].rateMS + '">' + cclRefreshRates[i].rateDesc + '</a></li>'));
+			$(cameraRefreshTagLinks + ' ul').append($('<li><a href="#" class="selectedItem cameraRefreshLink" rate="' + cclRefreshRates[i].rateMS + '">' + cclRefreshRates[i].rateDesc + '</a></li>'));
 		} else {
-			$('#refreshRates ul').append($('<li><a href="#" class="cameraRefreshLink" rate="' + cclRefreshRates[i].rateMS + '">' + cclRefreshRates[i].rateDesc + '</a></li>'));
+			$(cameraRefreshTagLinks + ' ul').append($('<li><a href="#" class="cameraRefreshLink" rate="' + cclRefreshRates[i].rateMS + '">' + cclRefreshRates[i].rateDesc + '</a></li>'));
 		}//end if(getRefreshValue() == cclRefreshRates[i].rateMS )
 
 	} //end for( var i=0; i < cclRefreshRates.length; i++ )
 
 
 	//Begin a div for the quality
-	$('#camQuality ul').empty();
 
+	// $('#camQuality ul').empty();
+	$(cameraQualityTagLinks + ' ul').remove();
+	$(cameraQualityTagLinks).append('<ul></ul>');
 	for( var i=0; i < cameraQualityLevelsGlobal.length; i++ )
 	{
 		if( getCookieQuality() == cameraQualityLevelsGlobal[i].quality )
 		{
-			$('#camQuality ul').append($('<li><a href="#" class="selectedItem cameraQualityLink" quality="' + cameraQualityLevelsGlobal[i].quality + '">' + cameraQualityLevelsGlobal[i].rateDesc + '</a></li>'));
+			$(cameraQualityTagLinks + ' ul').append($('<li><a href="#" class="selectedItem cameraQualityLink" quality="' + cameraQualityLevelsGlobal[i].quality + '">' + cameraQualityLevelsGlobal[i].rateDesc + '</a></li>'));
 		} else {
-			$('#camQuality ul').append($('<li><a href="#" class="cameraQualityLink" quality="' + cameraQualityLevelsGlobal[i].quality + '">' + cameraQualityLevelsGlobal[i].rateDesc + '</a></li>'));
+			$(cameraQualityTagLinks + ' ul').append($('<li><a href="#" class="cameraQualityLink" quality="' + cameraQualityLevelsGlobal[i].quality + '">' + cameraQualityLevelsGlobal[i].rateDesc + '</a></li>'));
 		}//end if(getRefreshValue() == cclRefreshRates[i].rateMS )
 
 	} //end for( var i=0; i < cclRefreshRates.length; i++ )

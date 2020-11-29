@@ -1,6 +1,6 @@
 /*
 Name: apc_snmp.js
-Version: 1.2.2
+Version: 1.2.3
 Author: Steve Talley (steve@dustysun.com)
 Website: DustySun.com
 
@@ -129,7 +129,7 @@ jQuery(function($) {
           var command_to_send = 3;
         }
 
-        ajaxURL = 'http://fusion.home:8082/snmp.php?community=' + snmp_community + '&ip=' + apc_target_ip + '&outlet=' + apc_target_outlet + '&command=' + command_to_send + '&statusonly=false';
+        ajaxURL = 'http://fusion.home:8082/snmp-control/snmp.php?community=' + snmp_community + '&ip=' + apc_target_ip + '&outlet=' + apc_target_outlet + '&command=' + command_to_send + '&statusonly=false';
         console.log(ajaxURL);
         $.ajax({
             dataType: "json",

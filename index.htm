@@ -20,12 +20,14 @@
 		<script type="text/javascript" src="jquery.md5.js"></script>
 		<script type="text/javascript" src="jquery.cookie.js"></script>
 		<!-- <script type="text/javascript" src="https://cdn.jsdelivr.net/clappr/latest/clappr.min.js"></script> -->
-		<script type="text/javascript" src="clear_view_cameras.js?ver=2019-09-17"></script>
-		<script type="text/javascript" src="apc_snmp.js?ver=2020-11-25"></script>
+		<script type="text/javascript" src="clear_view_cameras.js?ver=2020-11-28"></script>
+		<script type="text/javascript" src="apc_snmp.js?ver=2020-11-28"></script>
 
 		<link href="https://fonts.googleapis.com/css?family=Lato:400,700,900" rel="stylesheet" type="text/css">
-		<link rel="stylesheet" href="clear_view_cameras.css?ver=2018-02-19">
+		<link rel="stylesheet" href="clear_view_cameras.css?ver=2020-11-28">
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+		<link rel="manifest" href="manifest.json">
+
 	</head>
 
 	<div id="cameraSelection"></div>
@@ -76,8 +78,8 @@
 		<input type="checkbox" id="nav-trigger" class="nav-trigger" />
 		<label for="nav-trigger"></label>
 		<div class="site-wrap">
-		<div id="outerViewportWrapper">
-			<div id="cameraViewport">
+		<div id="cameraViewportWrapper" data-blue_iris_server="http://sol.home" data-scroll_to_top="false" data-resize_viewport="true" data-refresh_rate="200" data-quality="40">
+				<div id="cameraViewport">
 			<canvas id="cameraImg" height="640"></canvas>
 			<canvas id="bufferImg" height="640" style="display:none;"></canvas>
 			</div>
