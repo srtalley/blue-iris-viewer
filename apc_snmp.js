@@ -27,7 +27,7 @@ jQuery(function($) {
       apc_units.push({
         'name': 'Barn1',
         'ip': '10.0.1.15',
-        'outlets': ['5,8'],
+        'outlets': ['8,4,5'],
         'outlet_names': ['Light Pole Cameras'],
       });
 
