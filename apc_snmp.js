@@ -1,6 +1,6 @@
 /*
 Name: apc_snmp.js
-Version: 1.2.3
+Version: 1.2.4
 Author: Steve Talley (steve@dustysun.com)
 Website: DustySun.com
 
@@ -27,7 +27,7 @@ jQuery(function($) {
       apc_units.push({
         'name': 'Barn1',
         'ip': '10.0.1.15',
-        'outlets': ['8,4,5'],
+        'outlets': ['1'],
         'outlet_names': ['Light Pole Cameras'],
       });
 
