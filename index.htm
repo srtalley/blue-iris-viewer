@@ -21,7 +21,7 @@
 		<script type="text/javascript" src="jquery.cookie.js"></script>
 		<!-- <script type="text/javascript" src="https://cdn.jsdelivr.net/clappr/latest/clappr.min.js"></script> -->
 		<script type="text/javascript" src="clear_view_cameras.js?ver=2020-12-03"></script>
-		<script type="text/javascript" src="apc_snmp.js?ver=2022-03-07"></script>
+		<script type="text/javascript" src="apc_snmp.js?ver=2022-05-20"></script>
 
 		<link href="https://fonts.googleapis.com/css?family=Lato:400,700,900" rel="stylesheet" type="text/css">
 		<link rel="stylesheet" href="clear_view_cameras.css?ver=2020-11-28">
@@ -51,26 +51,32 @@
 			<li id="directCamLinks" class="nav-heading">
 				<span>Camera Links</span>
 				<ul>
-					<li><a href="http://10.0.1.31" target="_blank" title="user: administrator / password: s3kret">Workshop</a></li>
-					<li><a href="http://10.0.1.32" target="_blank" title="user: administrator / password: s3kret">Garage</a></li>
-					<li><a href="http://10.0.1.34" target="_blank" title="user: administrator / password: s3kret">HouseSide--Propane</a></li>
-					<li><a href="http://10.0.1.35" target="_blank" title="user: admin / password: s3kret">BarnBabyDucks</a></li>
-					<li><a href="http://10.0.1.54" target="_blank" title="user: admin / password: s3kret">BarnRear</a></li>
+					<li><a href="http://10.0.1.32" target="_blank" title="user: administrator / password: s3kret">Chicken Coop -- Pointing South</a></li>
+					<li><a href="http://10.0.1.42" target="_blank" title="user: admin / password: s3kret">Chicken Coop -- Pointing North</a></li>
+					<li><a href="http://10.0.1.35" target="_blank" title="user: admin / password: s3kret">Barn Rear -- Pointing South</a></li>
+					<li><a href="http://10.0.1.54" target="_blank" title="user: admin / password: s3kret">Barn Rear -- Pointing North</a></li>
+					<li><a href="http://10.0.1.40" target="_blank" title="user: admin / password: s3kret">Barn Front -- Chicken Door</a></li>
+					<li><a href="http://10.0.1.62" target="_blank" title="user: admin / password: s3kret">Barn Stalls Interior -- Pointing North</a></li>
+					<li><a href="http://10.0.1.56" target="_blank" title="user: admin / password: s3kret">Barn Stalls Interior -- Pointing South</a></li>
+
+
+					<li><a href="http://10.0.1.53" target="_blank" title="user: admin / password: s3kret">Duck House</a></li>
 					<li><a href="http://10.0.1.36" target="_blank" title="user: admin / password: s3kret">Duck</a></li>
-					<li><a href="http://10.0.1.37" target="_blank" title="user: admin / password: s3kret">Chicken1</a></li>
-					<li><a href="http://10.0.1.38" target="_blank" title="user: admin / password: s3kret">Basement</a></li>
-					<li><a href="http://10.0.1.39" target="_blank" title="user: admin / password: s3kret">Chicken2</a></li>
 					<li><a href="http://10.0.1.52" target="_blank" title="user: admin / password: s3kret">Garden</a></li>
-					<li><a href="http://10.0.1.42" target="_blank" title="user: admin / password: s3kret">HorseStallsInt</a></li>
-					<li><a href="http://10.0.1.43" target="_blank" title="user: admin / password: s3kret">ChickenExt</a></li>
-					<li><a href="http://10.0.1.53" target="_blank" title="user: admin / password: s3kret">BarnInt</a></li>
-					<li><a href="http://10.0.1.46" target="_blank" title="user: admin / password: s3kret">HorseField</a></li>
-					<li><a href="http://10.0.1.47" target="_blank" title="user: admin / password: s3kretcam">House Side--Dog</a></li>
-					<li><a href="http://10.0.1.40" target="_blank" title="user: admin / password: s3kret">Dog Area</a></li>
-					<li><a href="http://10.0.1.48" target="_blank" title="user: admin / password: s3kret">Driveway</a></li>
-					<li><a href="http://10.0.1.49" target="_blank" title="user: admin / password: s3kretcam">Gate</a></li>
-					<li><a href="http://10.0.1.50" target="_blank" title="user: admin / password: s3kretcam">HorseStallsExt</a></li>
-					<li><a href="http://10.0.1.51" target="_blank" title="user: admin / password: s3kretcam">HouseFront</a></li>
+					<li><a href="http://10.0.1.46" target="_blank" title="user: admin / password: s3kret">Horse Field -- Northeast</a></li>
+					<li><a href="http://10.0.1.60" target="_blank" title="user: admin / password: s3kret">Horse Paddock -- Main</a></li>
+					<li><a href="http://10.0.1.49" target="_blank" title="user: admin / password: s3kretcam">Hay Shed</a></li>
+
+					<li><a href="http://10.0.1.59" target="_blank" title="user: admin / password: s3kretcam">House Side -- Dog</a></li>
+					<li><a href="http://10.0.1.48" target="_blank" title="user: admin / password: s3kret">House Side -- Propane</a></li>
+					<li><a href="http://10.0.1.51" target="_blank" title="user: admin / password: s3kretcam">House Front</a></li>
+					<li><a href="http://10.0.1.58" target="_blank" title="user: admin / password: s3kretcam">Garage</a></li>
+					<li><a href="http://10.0.1.34" target="_blank" title="user: administrator / password: s3kret">Workshop</a></li>
+					<li><a href="http://10.0.1.57" target="_blank" title="user: admin / password: s3kretcam">Driveway -- Main</a></li>
+					<li><a href="http://10.0.1.57" target="_blank" title="user: admin / password: s3kretcam">Driveway -- Former Gate</a></li>
+					<li><a href="http://10.0.1.55" target="_blank" title="user: admin / password: s3kretcam">Driveway -- Gate</a></li>
+					<li><a href="http://10.0.4.175" target="_blank" title="user: admin / password: s3kretcam">Basement</a></li>
+
 				<!-- </span> -->
 			</ul>
 			</li>

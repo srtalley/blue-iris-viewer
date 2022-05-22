@@ -20,14 +20,14 @@ jQuery(function($) {
       apc_units.push({
         'name': 'Garage',
         'ip': '10.0.1.9',
-        'outlets': ['1', '4', '3'],
+        'outlets': ['1,7', '4', '3'],
         'outlet_names': ['Garage Cameras' , 'Garage Door Opener' , 'Garage WiFi'],
       });
 
       apc_units.push({
         'name': 'Barn1',
         'ip': '10.0.1.15',
-        'outlets': ['1'],
+        'outlets': ['1,4'],
         'outlet_names': ['Light Pole Cameras'],
       });
 
